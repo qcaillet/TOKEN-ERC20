@@ -3,12 +3,14 @@ import {ethers} from 'ethers'
 import Token from './artifacts/contracts/MyToken.sol/MyToken.json';
 import './App.css';
 
-const tokenAddress ="0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
+const tokenAddress ="0x5FbDB2315678afecb367f032d93F642f64180aa3";
 
 function App() {
 
    // ce qui va nous permettre de mettre le nombre de token que possede l'utilisateur.
-   const [balance, setBalance] = useState();
+   const [balance, setBalance] = useState(null);
+   const [ showBalanceModal, setShowBalanceModal ] = useState(false)
+
 
    // a definir 
      useEffect(() => {
@@ -21,20 +23,31 @@ function App() {
        if(typeof window.etherum !== 'unedefined'){
          // a definir 
          const accounts = await window.ethereum.request({method: 'eth_requestAccounts'});
+        /***recuperation eth sur le compte meta ***/ 
+         const account = accounts[0];
+         const balance = await window.ethereum.request({method: 'eth_getBalance', params: [account, 'latest']})
+         const wei = parseInt(balance,16)
+         const eth = (wei/ Math.pow(10, 18))
+
          // a definir
          const provider = new ethers.providers.Web3Provider(window.ethereum);
          // a definir 
          const contract = new ethers.Contract(tokenAddress, Token.abi, provider);
+
          // a definir 
-         const balance = await contract.balanceOf(accounts[0]);
+          const balanceToken = await contract.balanceOf(accounts[0]);
+          const token = (balanceToken / 10 ** 18)
          // a definir
-           setBalance(balance / 10 ** 18);
+           setBalance({token, eth});
+           setShowBalanceModal(true);
        }
      }
      return (
        <div className="App">
          <div> {console.log(balance)}</div>
-         <p> Vous avez {balance} MCO</p>
+         {showBalanceModal && (<div><p>{balance.eth + " ETH"}</p> 
+         <p>{balance.token + " MCO"}</p></div>)
+         }
        </div>
      );
 }
